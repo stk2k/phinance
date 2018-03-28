@@ -17,12 +17,11 @@ use Phinance\PhinanceClient;
  
 $client = new PhinanceClient();
  
-$markets = $client->getMarkets();
+$exchange_info = $client->getExchangeInfo();
  
-foreach($markets as $idx => $market){
+foreach($exchange_info->symbols as $idx => $symbol){
     echo $idx . '.' . PHP_EOL;
-    echo 'product_code:' . $market->product_code . PHP_EOL;
-    echo 'alias:' . (property_exists($market,'alias') ? $market->alias : '') . PHP_EOL;
+    echo 'symbol:' . $symbol->symbol . PHP_EOL;
 }
  
 ```
