@@ -1,0 +1,25 @@
+{
+  "name": "stk2k/phinance",
+  "description": "PHP binance API client library",
+  "keywords": ["binance", "PHP", "library", "binance api", "bitcoin"],
+  "homepage": "https://github.com/stk2k/phinance",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Katsuki Shuto",
+      "email": "stk2k@sazysoft.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "3.7.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Phinance\\": "src/"
+    }
+  }
+}
