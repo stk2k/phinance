@@ -13,7 +13,7 @@ class ApiClientException extends \Exception
      * @param \Exception|null $prev
      */
     public function __construct($api, $prev = null){
-        parent::__construct('bitFlyer api call failed:' . $api,0,$prev);
+        parent::__construct('API call failed:' . $api,0,$prev);
     
         $this->api = $api;
     }

@@ -1,6 +1,6 @@
 {
   "name": "stk2k/phinance",
-  "description": "PHP binance API client library",
+  "description": "phinance, binance API PHP client",
   "keywords": ["binance", "PHP", "library", "binance api", "bitcoin"],
   "homepage": "https://github.com/stk2k/phinance",
   "type": "library",

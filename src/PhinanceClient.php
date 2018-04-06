@@ -15,7 +15,7 @@ use Phinance\Http\CurlHandle;
  */
 class PhinanceClient implements IPhinanceClient
 {
-    const DEFAULT_USERAGENT    = 'phitFlyer';
+    const DEFAULT_USERAGENT    = 'phinance';
     
     private $api_key;
     private $api_secret;
@@ -452,7 +452,7 @@ class PhinanceClient implements IPhinanceClient
      *
      * @param string $symbol
      *
-     * @return array
+     * @return array|object
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
