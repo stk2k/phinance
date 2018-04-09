@@ -1,6 +1,7 @@
 <?php
 require dirname(dirname(__FILE__)) . '/vendor/autoload.php';
 require dirname(__FILE__) . '/include/autoload.php';
+require dirname(__FILE__) . '/include/sample.inc.php';
 
 use Phinance\PhinanceClient;
 

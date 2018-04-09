@@ -12,9 +12,9 @@ try{
     
     $exchange_info = $client->getExchangeInfo();
     
-    foreach($exchange_info->symbols as $idx => $symbol){
+    foreach($exchange_info['symbols'] as $idx => $symbol){
         echo $idx . '.' . PHP_EOL;
-        echo 'symbol:' . $symbol->symbol . PHP_EOL;
+        echo 'symbol:' . $symbol['symbol'] . PHP_EOL;
     }
 }
 catch(\Exception $e)

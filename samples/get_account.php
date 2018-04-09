@@ -17,7 +17,7 @@ $client = new PhinanceClient($api_key, $api_secret);
 try{
 // call web API
     $client->setServerTime();
-    
+
     $account = $client->getAcount($recvWindow);
 
 // show request URI

@@ -5,6 +5,8 @@ require dirname(__FILE__) . '/include/sample.inc.php';
 
 use Phinance\PhinanceClient;
 
+list($api_key, $api_secret) = binance_credentials();
+
 $argdefs = array(
     'symbol' => 'string',
     '[fromid]' => 'integer',
@@ -12,7 +14,7 @@ $argdefs = array(
 );
 list($symbol, $fromid, $limit) = get_args($argdefs,__FILE__);
 
-$client = new PhinanceClient();
+$client = new PhinanceClient($api_key, $api_secret);
 
 try{
 // call web API

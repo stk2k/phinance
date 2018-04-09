@@ -6,8 +6,8 @@ use Phinance\Exception\ServerResponseFormatException;
 use Phinance\Http\CurlRequest;
 use Phinance\Http\HttpGetRequest;
 use Phinance\Http\HttpDeleteRequest;
-use Phinance\Http\JsonPostRequest;
 use Phinance\Http\CurlHandle;
+use Phinance\Enum\EnumSecurityType;
 
 
 /**
@@ -99,6 +99,7 @@ class PhinanceClient implements IPhinanceClient
      * call web API(private) by HTTP/GET
      *
      * @param string $api
+     * @param string $security_type
      * @param array|null $query_data
      * @param bool $return_value
      *
@@ -106,64 +107,44 @@ class PhinanceClient implements IPhinanceClient
      *
      * @throws ApiClientException
      */
-    private function privateGet($api, $query_data = null, $return_value = true)
+    private function privateGet($api, $security_type, $query_data = null, $return_value = true)
     {
         $query_data = is_array($query_data) ? array_filter($query_data, function($v){
             return $v !== null;
         }) : null;
-        
-        $ts = (microtime(true)*1000) + $this->time_offset;
-        $query_data['timestamp'] = number_format($ts,0,'.','');
-        $query = http_build_query($query_data, '', '&');
-        $signature = hash_hmac('sha256', $query, $this->api_secret);
-    
-        $options['http_headers'] = array(
-            'X-MBX-APIKEY' => $this->api_key,
-        );
-        //$options['verbose'] = 1;
-        
-        $url = self::getURL($api) . '?' . $query . '&signature=' . $signature;
+
+        $options = [];
+        switch($security_type){
+            case EnumSecurityType::TRADE:
+            case EnumSecurityType::USER_DATA:
+                $ts = (microtime(true)*1000) + $this->time_offset;
+                $query_data['timestamp'] = number_format($ts,0,'.','');
+                $query = http_build_query($query_data, '', '&');
+                $signature = hash_hmac('sha256', $query, $this->api_secret);
+                $options['http_headers'] = [
+                    'X-MBX-APIKEY' => $this->api_key,
+                ];
+                $url = self::getURL($api) . '?' . $query . '&signature=' . $signature;
+                break;
+
+            case EnumSecurityType::USER_STREAM:
+            case EnumSecurityType::MARKET_DATA:
+                $query = http_build_query($query_data, '', '&');
+                $options['http_headers'] = [
+                    'X-MBX-APIKEY' => $this->api_key,
+                ];
+                $url = self::getURL($api) . '?' . $query;
+                break;
+            default:
+                throw new \LogicException('Invalid security type:' . $security_type);
+                break;
+        }
+
         $request = new HttpGetRequest($this, $url, array(), $options);
     
         return $this->executeRequest($request, $return_value);
     }
-    
-    /**
-     * call web API(private) by HTTP/POST
-     *
-     * @param string $api
-     * @param array $post_data
-     * @param bool $return_value
-     *
-     * @return mixed
-     *
-     * @throws ApiClientException
-     */
-    private function privatePost($api, $post_data = null, $return_value = true)
-    {
-        $post_data = is_array($post_data) ? array_filter($post_data, function($v){
-            return $v !== null;
-        }) : null;
-        
-        $timestamp = time();
-        $method = 'POST';
-        $body = !empty($post_data) ? json_encode($post_data, JSON_FORCE_OBJECT) : '';
-        $text = $timestamp . $method . $api . $body;
-        $sign = hash_hmac('sha256', $text, $this->api_secret);
-        
-        $options['http_headers'] = array(
-            'Content-Type' => 'application/json',
-            'ACCESS-KEY' => $this->api_key,
-            'ACCESS-TIMESTAMP' => $timestamp,
-            'ACCESS-SIGN' => $sign,
-        );
-        
-        $url = self::getURL($api);
-        $request = new JsonPostRequest($this, $url, $post_data, $options);
-    
-        return $this->executeRequest($request, $return_value);
-    }
-    
+
     /**
      * call web API(private) by HTTP/GET
      *
@@ -227,8 +208,8 @@ class PhinanceClient implements IPhinanceClient
         // HTTP GET
         $json = $this->get(PhinanceApi::PING);
         // check return type
-        if (!is_object($json)){
-            throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
     }
     
@@ -257,10 +238,10 @@ class PhinanceClient implements IPhinanceClient
         // HTTP GET
         $json = $this->get(PhinanceApi::TIME);
         // check return type
-        if (!is_object($json)){
-            throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
-        return $json->serverTime;
+        return $json['serverTime'];
     }
     
     /**
@@ -276,8 +257,8 @@ class PhinanceClient implements IPhinanceClient
         // HTTP GET
         $json = $this->get(PhinanceApi::EXCHANGEINFO);
         // check return type
-        if (!is_object($json)){
-            throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
         return $json;
     }
@@ -305,8 +286,8 @@ class PhinanceClient implements IPhinanceClient
         // HTTP GET
         $json = $this->get(PhinanceApi::DEPTH, $data);
         // check return type
-        if (!is_object($json)){
-            throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
         return $json;
     }
@@ -366,7 +347,7 @@ class PhinanceClient implements IPhinanceClient
         }
     
         // HTTP GET
-        $json = $this->get(PhinanceApi::HISTORICALTRADES, $data);
+        $json = $this->privateGet(PhinanceApi::HISTORICALTRADES, EnumSecurityType::MARKET_DATA, $data);
         // check return type
         if (!is_array($json)){
             throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
@@ -537,7 +518,7 @@ class PhinanceClient implements IPhinanceClient
         }
     
         // HTTP GET
-        $json = $this->privateGet(PhinanceApi::OPENORDERS, $data);
+        $json = $this->privateGet(PhinanceApi::OPENORDERS, EnumSecurityType::USER_DATA, $data);
         // check return type
         if (!is_array($json)){
             throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
@@ -577,7 +558,7 @@ class PhinanceClient implements IPhinanceClient
         }
     
         // HTTP GET
-        $json = $this->privateGet(PhinanceApi::ALLORDERS, $data);
+        $json = $this->privateGet(PhinanceApi::ALLORDERS, EnumSecurityType::USER_DATA, $data);
         // check return type
         if (!is_array($json)){
             throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
@@ -636,10 +617,10 @@ class PhinanceClient implements IPhinanceClient
         }
     
         // HTTP GET
-        $json = $this->privateGet(PhinanceApi::ACCOUNT, $data);
+        $json = $this->privateGet(PhinanceApi::ACCOUNT, EnumSecurityType::USER_DATA, $data);
         // check return type
-        if (!is_object($json)){
-            throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
         return $json;
     }
@@ -674,7 +655,7 @@ class PhinanceClient implements IPhinanceClient
         }
     
         // HTTP GET
-        $json = $this->privateGet(PhinanceApi::MYTRADES, $data);
+        $json = $this->privateGet(PhinanceApi::MYTRADES, EnumSecurityType::USER_DATA, $data);
         // check return type
         if (!is_array($json)){
             throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));

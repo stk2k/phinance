@@ -20,7 +20,7 @@ $client = new PhinanceClient($api_key, $api_secret);
 try{
 // call web API
     $client->setServerTime();
-    
+
     $all_orders = $client->getAllOrders($symbol, $orderId, $limit, $recvWindow);
 
 // show request URI
