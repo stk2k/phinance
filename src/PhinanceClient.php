@@ -433,7 +433,7 @@ class PhinanceClient implements IPhinanceClient
      *
      * @param string $symbol
      *
-     * @return array|object
+     * @return array
      *
      * @throws ServerResponseFormatException
      * @throws ApiClientException
@@ -448,16 +448,8 @@ class PhinanceClient implements IPhinanceClient
         // HTTP GET
         $json = $this->get(PhinanceApi::TICKER_PRICE, $data);
         // check return type
-        if ($symbol)
-        {
-            if (!is_object($json)){
-                throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
-            }
-        }
-        else{
-            if (!is_array($json)){
-                throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-            }
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
         return $json;
     }

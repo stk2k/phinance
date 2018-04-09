@@ -9,6 +9,6 @@ class ServerResponseFormatException extends \Exception
      * @param string $message
      */
     public function __construct($message){
-        parent::__construct('bitFlyer api server returned illegal response:' . $message);
+        parent::__construct('API server returned illegal response:' . $message);
     }
 }
