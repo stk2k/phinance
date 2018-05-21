@@ -69,12 +69,9 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function ping()
     {
-        // HTTP GET
-        $json = $this->get(PhinanceApi::PING);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
+        $this->logger->debug('started ping');
+        $this->client->ping();
+        $this->logger->debug('finished ping');
     }
 
     /**
@@ -84,8 +81,9 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function setServerTime()
     {
-        $server_time = $this->getTime();
-        $this->time_offset = $server_time - (microtime(true)*1000);
+        $this->logger->debug('started setServerTime');
+        $this->client->setServerTime();
+        $this->logger->debug('finished setServerTime');
     }
 
     /**
@@ -97,13 +95,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function getTime()
     {
-        // HTTP GET
-        $json = $this->get(PhinanceApi::TIME);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
-        return $json['serverTime'];
+        $this->logger->debug('started getTime');
+        $ret = $this->client->getTime();
+        $this->logger->debug('finished getTime');
+        return $ret;
     }
 
     /**
@@ -115,13 +110,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function getExchangeInfo()
     {
-        // HTTP GET
-        $json = $this->get(PhinanceApi::EXCHANGEINFO);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
-        return $json;
+        $this->logger->debug('started getExchangeInfo');
+        $ret = $this->client->getExchangeInfo();
+        $this->logger->debug('finished getExchangeInfo');
+        return $ret;
     }
 
     /**
@@ -136,20 +128,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function getDepth($symbol, $limit = NULL)
     {
-        $data = array(
-            'symbol' => $symbol,
-        );
-        if ($limit){
-            $data['limit'] = $limit;
-        }
-
-        // HTTP GET
-        $json = $this->get(PhinanceApi::DEPTH, $data);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
-        return $json;
+        $this->logger->debug('started getDepth');
+        $ret = $this->client->getDepth($symbol, $limit);
+        $this->logger->debug('finished getDepth');
+        return $ret;
     }
 
     /**
@@ -164,20 +146,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function getTrades($symbol, $limit = NULL)
     {
-        $data = array(
-            'symbol' => $symbol,
-        );
-        if ($limit){
-            $data['limit'] = $limit;
-        }
-
-        // HTTP GET
-        $json = $this->get(PhinanceApi::TRADES, $data);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
-        return $json;
+        $this->logger->debug('started getTrades');
+        $ret = $this->client->getTrades($symbol, $limit);
+        $this->logger->debug('finished getTrades');
+        return $ret;
     }
 
 
@@ -194,23 +166,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function getHistoricalTrades($symbol, $fromId = NULL, $limit = NULL)
     {
-        $data = array(
-            'symbol' => $symbol,
-        );
-        if ($fromId){
-            $data['fromId'] = $fromId;
-        }
-        if ($limit){
-            $data['limit'] = $limit;
-        }
-
-        // HTTP GET
-        $json = $this->privateGet(PhinanceApi::HISTORICALTRADES, EnumSecurityType::MARKET_DATA, $data);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
-        return $json;
+        $this->logger->debug('started getHistoricalTrades');
+        $ret = $this->client->getHistoricalTrades($symbol, $fromId, $limit);
+        $this->logger->debug('finished getHistoricalTrades');
+        return $ret;
     }
 
     /**
@@ -228,27 +187,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function getKlines($symbol, $interval, $limit = NULL, $startTime = NULL, $endTime = NULL)
     {
-        $data = array(
-            'symbol' => $symbol,
-            'interval' => $interval,
-        );
-        if ($limit){
-            $data['limit'] = $limit;
-        }
-        if ($startTime){
-            $data['startTime'] = $startTime;
-        }
-        if ($endTime){
-            $data['endTime'] = $endTime;
-        }
-
-        // HTTP GET
-        $json = $this->get(PhinanceApi::KLINES, $data);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
-        return $json;
+        $this->logger->debug('started getKlines');
+        $ret = $this->client->getKlines($symbol, $interval, $limit, $startTime, $endTime);
+        $this->logger->debug('finished getKlines');
+        return $ret;
     }
 
     /**
@@ -262,26 +204,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function getTicker24hr($symbol = NULL)
     {
-        $data = array();
-        if ($symbol){
-            $data['symbol'] = $symbol;
-        }
-
-        // HTTP GET
-        $json = $this->get(PhinanceApi::TICKER_24HR, $data);
-        // check return type
-        if ($symbol)
-        {
-            if (!is_object($json)){
-                throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
-            }
-        }
-        else{
-            if (!is_array($json)){
-                throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-            }
-        }
-        return $json;
+        $this->logger->debug('started getTicker24hr');
+        $ret = $this->client->getTicker24hr($symbol);
+        $this->logger->debug('finished getTicker24hr');
+        return $ret;
     }
 
     /**
@@ -295,18 +221,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function getTickerPrice($symbol = NULL)
     {
-        $data = array();
-        if ($symbol){
-            $data['symbol'] = $symbol;
-        }
-
-        // HTTP GET
-        $json = $this->get(PhinanceApi::TICKER_PRICE, $data);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
-        return $json;
+        $this->logger->debug('started getTickerPrice');
+        $ret = $this->client->getTickerPrice($symbol);
+        $this->logger->debug('finished getTickerPrice');
+        return $ret;
     }
 
     /**
@@ -320,26 +238,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function getTickerBookTicker($symbol = NULL)
     {
-        $data = array();
-        if ($symbol){
-            $data['symbol'] = $symbol;
-        }
-
-        // HTTP GET
-        $json = $this->get(PhinanceApi::TICKER_BOOKTICKER, $data);
-        // check return type
-        if ($symbol)
-        {
-            if (!is_object($json)){
-                throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
-            }
-        }
-        else{
-            if (!is_array($json)){
-                throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-            }
-        }
-        return $json;
+        $this->logger->debug('started getTickerBookTicker');
+        $ret = $this->client->getTickerBookTicker($symbol);
+        $this->logger->debug('finished getTickerBookTicker');
+        return $ret;
     }
 
     /**
@@ -354,21 +256,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function getOpenOrders($symbol = NULL, $recvWindow = NULL)
     {
-        $data = array();
-        if ($symbol){
-            $data['symbol'] = $symbol;
-        }
-        if ($recvWindow){
-            $data['recvWindow'] = $recvWindow;
-        }
-
-        // HTTP GET
-        $json = $this->privateGet(PhinanceApi::OPENORDERS, EnumSecurityType::USER_DATA, $data);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
-        return $json;
+        $this->logger->debug('started getOpenOrders');
+        $ret = $this->client->getOpenOrders($symbol, $recvWindow);
+        $this->logger->debug('finished getOpenOrders');
+        return $ret;
     }
 
 
@@ -386,28 +277,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function getAllOrders($symbol = NULL, $orderId = NULL, $limit = NULL, $recvWindow = NULL)
     {
-        $data = array(
-        );
-        if ($symbol){
-            $data['symbol'] = $symbol;
-        }
-        if ($orderId){
-            $data['orderId'] = $orderId;
-        }
-        if ($limit){
-            $data['limit'] = $limit;
-        }
-        if ($recvWindow){
-            $data['recvWindow'] = $recvWindow;
-        }
-
-        // HTTP GET
-        $json = $this->privateGet(PhinanceApi::ALLORDERS, EnumSecurityType::USER_DATA, $data);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
-        return $json;
+        $this->logger->debug('started getAllOrders');
+        $ret = $this->client->getAllOrders($symbol, $orderId, $limit, $recvWindow);
+        $this->logger->debug('finished getAllOrders');
+        return $ret;
     }
 
     /**
@@ -426,24 +299,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function sendOrder($symbol, $side, $type, $quantity, $price = NULL, $options = [])
     {
-        $data = array(
-            'symbol' => $symbol,
-            'side' => $side,
-            'type' => $type,
-            'quantity' => $quantity,
-        );
-        if ($price){
-            $data['price'] = number_format( $price, 8, '.', '' );
-        }
-        $data = array_merge($data, $options);
-
-        // HTTP POST
-        $json = $this->privatePost(PhinanceApi::ORDER, EnumSecurityType::TRADE, $data);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
-        return $json;
+        $this->logger->debug('started sendOrder');
+        $ret = $this->client->sendOrder($symbol, $side, $type, $quantity, $price, $options);
+        $this->logger->debug('finished sendOrder');
+        return $ret;
     }
 
     /**
@@ -460,20 +319,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function cancelOrder($symbol, $orderId = NULL, $origClientOrderId = NULL, $recvWindow = NULL)
     {
-        $data = array(
-            'symbol' => $symbol,
-        );
-        if ($recvWindow){
-            $data['recvWindow'] = $recvWindow;
-        }
-
-        // HTTP DELETE
-        $json = $this->privateDelete(PhinanceApi::ORDER, $data);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
-        return $json;
+        $this->logger->debug('started cancelOrder');
+        $ret = $this->client->cancelOrder($symbol, $orderId, $origClientOrderId, $recvWindow);
+        $this->logger->debug('finished cancelOrder');
+        return $ret;
     }
 
     /**
@@ -487,19 +336,10 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function getAcount($recvWindow = NULL)
     {
-        $data = array(
-        );
-        if ($recvWindow){
-            $data['recvWindow'] = $recvWindow;
-        }
-
-        // HTTP GET
-        $json = $this->privateGet(PhinanceApi::ACCOUNT, EnumSecurityType::USER_DATA, $data);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
-        return $json;
+        $this->logger->debug('started getAcount');
+        $ret = $this->client->getAcount($recvWindow);
+        $this->logger->debug('finished getAcount');
+        return $ret;
     }
 
 
@@ -517,25 +357,9 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      */
     public function getMyTrades($symbol, $limit = NULL, $fromId = NULL, $recvWindow = NULL)
     {
-        $data = array(
-            'symbol' => $symbol,
-        );
-        if ($limit){
-            $data['limit'] = $limit;
-        }
-        if ($fromId){
-            $data['fromId'] = $fromId;
-        }
-        if ($recvWindow){
-            $data['recvWindow'] = $recvWindow;
-        }
-
-        // HTTP GET
-        $json = $this->privateGet(PhinanceApi::MYTRADES, EnumSecurityType::USER_DATA, $data);
-        // check return type
-        if (!is_array($json)){
-            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-        }
-        return $json;
+        $this->logger->debug('started getMyTrades');
+        $ret = $this->client->getMyTrades($symbol, $limit, $fromId, $recvWindow);
+        $this->logger->debug('finished getMyTrades');
+        return $ret;
     }
 }

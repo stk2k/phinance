@@ -166,7 +166,23 @@ interface PhinanceClientInterface
      * @throws PhinanceClientException
      */
     public function getAllOrders($symbol = NULL, $orderId = NULL, $limit = NULL, $recvWindow = NULL);
-    
+
+    /**
+     * [public] Send in a new order.
+     *
+     * @param string $symbol
+     * @param string $side
+     * @param string $type
+     * @param float $quantity
+     * @param float $price
+     * @param array $options   timeInForce, newClientOrderId, stopPrice, icebergQty, newOrderRespType, recvWindow
+     *
+     * @return array
+     *
+     * @throws PhinanceClientException
+     */
+    public function sendOrder($symbol, $side, $type, $quantity, $price = NULL, $options = []);
+
     /**
      * [TRADE] Cancel an active order.
      *
