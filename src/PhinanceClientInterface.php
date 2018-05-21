@@ -1,27 +1,40 @@
 <?php
 namespace Phinance;
 
-use Phinance\Exception\ApiClientException;
-use Phinance\Exception\ServerResponseFormatException;
+use NetDriver\Http\HttpRequest;
+
+use Phinance\Exception\PhinanceClientException;
 
 /**
  * Phinance interface
  */
-interface IPhinanceClient
+interface PhinanceClientInterface
 {
+    /**
+     * get last request
+     *
+     * @return HttpRequest
+     */
+    public function getLastRequest();
+
+    /**
+     * add net driver change listener
+     *
+     * @param NetDriverChangeListenerInterface|callable $listener
+     */
+    public function addNetDriverChangeListener($listener);
+
     /**
      * [public] send ping
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function ping();
     
     /**
      * [public] set server time offset
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function setServerTime();
     
@@ -30,8 +43,7 @@ interface IPhinanceClient
      *
      * @return int
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function getTime();
     
@@ -40,8 +52,7 @@ interface IPhinanceClient
      *
      * @return object
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function getExchangeInfo();
     
@@ -53,8 +64,7 @@ interface IPhinanceClient
      *
      * @return object
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function getDepth($symbol, $limit = NULL);
     
@@ -66,8 +76,7 @@ interface IPhinanceClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function getTrades($symbol, $limit = NULL);
     
@@ -80,8 +89,7 @@ interface IPhinanceClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function getHistoricalTrades($symbol, $fromId = NULL, $limit = NULL);
     
@@ -96,8 +104,7 @@ interface IPhinanceClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function getKlines($symbol, $interval, $limit = NULL, $startTime = NULL, $endTime = NULL);
     
@@ -108,8 +115,7 @@ interface IPhinanceClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function getTicker24hr($symbol = NULL);
     
@@ -120,8 +126,7 @@ interface IPhinanceClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function getTickerPrice($symbol = NULL);
     
@@ -132,8 +137,7 @@ interface IPhinanceClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function getTickerBookTicker($symbol = NULL);
     
@@ -145,8 +149,7 @@ interface IPhinanceClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function getOpenOrders($symbol = NULL, $recvWindow = NULL);
     
@@ -160,8 +163,7 @@ interface IPhinanceClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function getAllOrders($symbol = NULL, $orderId = NULL, $limit = NULL, $recvWindow = NULL);
     
@@ -175,8 +177,7 @@ interface IPhinanceClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function cancelOrder($symbol, $orderId = NULL, $origClientOrderId = NULL, $recvWindow = NULL);
     
@@ -187,8 +188,7 @@ interface IPhinanceClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function getAcount($recvWindow = NULL);
     
@@ -202,8 +202,7 @@ interface IPhinanceClient
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws ApiClientException
+     * @throws PhinanceClientException
      */
     public function getMyTrades($symbol, $limit = NULL, $fromId = NULL, $recvWindow = NULL);
 }

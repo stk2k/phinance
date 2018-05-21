@@ -1,58 +1,35 @@
 <?php
 namespace Phinance;
 
-use NetDriver\NetDriverInterface;
-use NetDriver\NetDriverHandleInterface;
 use NetDriver\Http\HttpRequest;
-use NetDriver\Http\HttpGetRequest;
-use NetDriver\Http\HttpPostRequest;
-use NetDriver\Http\HttpDeleteRequest;
-use NetDriver\NetDriver\Curl\CurlNetDriver;
+use NetDriver\NetDriverInterface;
+
+use Psr\Log\LoggerInterface;
 
 use Phinance\Exception\PhinanceClientException;
-use Phinance\Exception\ServerResponseFormatException;
-use Phinance\Exception\WebApiCallException;
-use Phinance\Enum\EnumSecurityType;
 
 /**
- * Phinance client class
+ * Logger decorator
  */
-class PhinanceClient implements PhinanceClientInterface
+class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeListenerInterface
 {
-    /** @var null|string  */
-    private $api_key;
-
-    /** @var null|string  */
-    private $api_secret;
-
-    /** @var NetDriverHandleInterface  */
-    private $netdriver_handle;
-
-    /** @var HttpRequest */
-    private $last_request;
-
-    /** @var int  */
-    private $time_offset;
-
-    /** @var NetDriverInterface */
-    private $net_driver;
-
-    /** @var NetDriverChangeListenerInterface[] */
-    private $listeners;
-
+    /** @var PhinanceClientInterface  */
+    private $client;
+    
+    /** @var LoggerInterface */
+    private $logger;
+    
     /**
      * construct
      *
-     * @param string|null $api_key
-     * @param string|null $api_secret
+     * @param PhinanceClientInterface $client
+     * @param LoggerInterface $logger
      */
-    public function __construct($api_key = null, $api_secret = null){
-        $this->api_key = $api_key;
-        $this->api_secret = $api_secret;
-        $this->netdriver_handle = null;
-        $this->last_request = null;
-        $this->time_offset = 0;
-        $this->listeners = [];
+    public function __construct($client, $logger){
+        $this->client = $client;
+        $this->logger = $logger;
+
+        $client->addNetDriverChangeListener($this);
     }
 
     /**
@@ -62,7 +39,17 @@ class PhinanceClient implements PhinanceClientInterface
      */
     public function getLastRequest()
     {
-        return $this->last_request;
+        return $this->client->getLastRequest();
+    }
+
+    /**
+     * Net driver change callback
+     *
+     * @param NetDriverInterface $net_driver
+     */
+    public function onNetDriverChanged(NetDriverInterface $net_driver)
+    {
+        $net_driver->setLogger($this->logger);
     }
 
     /**
@@ -72,270 +59,12 @@ class PhinanceClient implements PhinanceClientInterface
      */
     public function addNetDriverChangeListener($listener)
     {
-        if (is_callable($listener) || $listener instanceof NetDriverChangeListenerInterface)
-            $this->listeners[] = $listener;
-    }
-
-    /**
-     * set net driver
-     *
-     * @param NetDriverInterface $net_driver
-     */
-    public function setNetDriver(NetDriverInterface $net_driver)
-    {
-        $this->net_driver = $net_driver;
-
-        // callback
-        $this->fireNetDriverChangeEvent($net_driver);
-    }
-
-    /**
-     * net driver change callback
-     *
-     * @param NetDriverInterface $net_driver
-     */
-    private function fireNetDriverChangeEvent(NetDriverInterface $net_driver)
-    {
-        foreach($this->listeners as $l) {
-            if ($l instanceof NetDriverChangeListenerInterface) {
-                $l->onNetDriverChanged($net_driver);
-            }
-            else if (is_callable($l)) {
-                $l($net_driver);
-            }
-        }
-    }
-
-    /**
-     * get net friver
-     *
-     * @return CurlNetDriver|NetDriverInterface
-     */
-    public function getNetDriver()
-    {
-        if ($this->net_driver){
-            return $this->net_driver;
-        }
-        $this->net_driver = new CurlNetDriver();
-        // callback
-        $this->fireNetDriverChangeEvent($this->net_driver);
-        return $this->net_driver;
-    }
-
-    /**
-     * get net driver handle
-     *
-     * @return NetDriverHandleInterface|null
-     */
-    public function getNetDriverHandle()
-    {
-        if ($this->netdriver_handle){
-            return $this->netdriver_handle;
-        }
-        $this->netdriver_handle = $this->getNetDriver()->newHandle();
-        return $this->netdriver_handle;
-    }
-
-    /**
-     * make request URL
-     *
-     * @param string $api
-     * @param array $query_data
-     *
-     * @return string
-     */
-    private static function getURL($api, array $query_data = null)
-    {
-        $url = PhinanceApi::ENDPOINT . $api;
-        if ($query_data){
-            $url .= '?' . http_build_query($query_data);
-        }
-        return $url;
-    }
-
-    /**
-     * call web API by HTTP/GET
-     *
-     * @param string $api
-     * @param array|null $query_data
-     *
-     * @return mixed
-     *
-     * @throws PhinanceClientException
-     */
-    private function get($api, array $query_data = [])
-    {
-        $query_data = array_filter($query_data, function($v){
-            return $v !== null;
-        });
-
-        $url = self::getURL($api, $query_data);
-        $request = new HttpGetRequest($this->getNetDriver(), $url);
-
-        return $this->executeRequest($request);
-    }
-
-    /**
-     * call web API(private) by HTTP/GET
-     *
-     * @param string $api
-     * @param string $security_type
-     * @param array|null $query_data
-     *
-     * @return mixed
-     *
-     * @throws PhinanceClientException
-     */
-    private function privateGet($api, $security_type, array $query_data = [])
-    {
-        $query_data = array_filter($query_data, function($v){
-            return $v !== null;
-        });
-
-        $options = [];
-        switch($security_type){
-            case EnumSecurityType::TRADE:
-            case EnumSecurityType::USER_DATA:
-                $ts = (microtime(true)*1000) + $this->time_offset;
-                $query_data['timestamp'] = number_format($ts,0,'.','');
-                $query = http_build_query($query_data, '', '&');
-                $signature = hash_hmac('sha256', $query, $this->api_secret);
-                $options['http-headers'] = [
-                    'X-MBX-APIKEY' => $this->api_key,
-                ];
-                $url = self::getURL($api) . '?' . $query . '&signature=' . $signature;
-                break;
-
-            case EnumSecurityType::USER_STREAM:
-            case EnumSecurityType::MARKET_DATA:
-                $query = http_build_query($query_data, '', '&');
-                $options['http-headers'] = [
-                    'X-MBX-APIKEY' => $this->api_key,
-                ];
-                $url = self::getURL($api) . '?' . $query;
-                break;
-            default:
-                throw new \LogicException('Invalid security type:' . $security_type);
-                break;
-        }
-
-        $request = new HttpGetRequest($this->getNetDriver(), $url, $options);
-
-        return $this->executeRequest($request);
-    }
-
-    /**
-     * call web API(private) by HTTP/POST
-     *
-     * @param string $api
-     * @param string $security_type
-     * @param array $post_data
-     *
-     * @return mixed
-     *
-     * @throws PhinanceClientException
-     */
-    private function privatePost($api, $security_type, array $post_data = [])
-    {
-        $post_data = array_filter($post_data, function($v){
-            return $v !== null;
-        });
-
-        $options = [];
-        switch($security_type){
-            case EnumSecurityType::TRADE:
-            case EnumSecurityType::USER_DATA:
-                $ts = (microtime(true)*1000) + $this->time_offset;
-                $post_data['timestamp'] = number_format($ts,0,'.','');
-                $query = http_build_query($post_data, '', '&');
-                $signature = hash_hmac('sha256', $query, $this->api_secret);
-                $options['http-headers'] = [
-                    'X-MBX-APIKEY' => $this->api_key,
-                ];
-                $url = self::getURL($api) . '?' . $query . '&signature=' . $signature;
-                break;
-
-            case EnumSecurityType::USER_STREAM:
-            case EnumSecurityType::MARKET_DATA:
-                $options['http-headers'] = [
-                    'X-MBX-APIKEY' => $this->api_key,
-                ];
-                $url = self::getURL($api);
-                break;
-            default:
-                throw new \LogicException('Invalid security type:' . $security_type);
-                break;
-        }
-
-        $request = new HttpPostRequest($this->getNetDriver(), $url, $post_data, $options);
-
-        return $this->executeRequest($request);
-    }
-
-    /**
-     * call web API(private) by HTTP/GET
-     *
-     * @param string $api
-     * @param array|null $query_data
-     *
-     * @return mixed
-     *
-     * @throws PhinanceClientException
-     */
-    private function privateDelete($api, array $query_data = [])
-    {
-        $query_data = array_filter($query_data, function($v){
-            return $v !== null;
-        });
-
-        $ts = (microtime(true)*1000) + $this->time_offset;
-        $query_data['timestamp'] = number_format($ts,0,'.','');
-        $query = http_build_query($query_data, '', '&');
-        $signature = hash_hmac('sha256', $query, $this->api_secret);
-
-        $options['http-headers'] = array(
-            'X-MBX-APIKEY' => $this->api_key,
-        );
-        //$options['verbose'] = 1;
-
-        $url = self::getURL($api) . '?' . $query . '&signature=' . $signature;
-        $request = new HttpDeleteRequest($this->getNetDriver(), $url,  $options);
-
-        return $this->executeRequest($request);
-    }
-
-    /**
-     * execute request
-     *
-     * @param HttpRequest $request
-     *
-     * @return mixed
-     *
-     * @throws PhinanceClientException
-     */
-    private function executeRequest($request)
-    {
-        try{
-            $response = $this->net_driver->sendRequest($this->getNetDriverHandle(), $request);
-
-            $this->last_request = $request;
-
-            $json = @json_decode($response->getBody(), true);
-            if ($json === null){
-                throw new WebApiCallException(json_last_error_msg() . '/' . $response->getBody());
-            }
-            return $json;
-        }
-        catch(\Throwable $e)
-        {
-            throw new PhinanceClientException('NetDriver#sendRequest() failed: ' . $e->getMessage(), $e);
-        }
+        $this->client->addNetDriverChangeListener($listener);
     }
 
     /**
      * [public] send ping
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function ping()
@@ -351,7 +80,6 @@ class PhinanceClient implements PhinanceClientInterface
     /**
      * [public] set server time offset
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function setServerTime()
@@ -365,7 +93,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return int
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function getTime()
@@ -384,7 +111,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return object
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function getExchangeInfo()
@@ -406,7 +132,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return object
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function getDepth($symbol, $limit = NULL)
@@ -435,7 +160,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function getTrades($symbol, $limit = NULL)
@@ -466,7 +190,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function getHistoricalTrades($symbol, $fromId = NULL, $limit = NULL)
@@ -501,7 +224,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function getKlines($symbol, $interval, $limit = NULL, $startTime = NULL, $endTime = NULL)
@@ -536,7 +258,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function getTicker24hr($symbol = NULL)
@@ -570,7 +291,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function getTickerPrice($symbol = NULL)
@@ -596,7 +316,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function getTickerBookTicker($symbol = NULL)
@@ -631,7 +350,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function getOpenOrders($symbol = NULL, $recvWindow = NULL)
@@ -664,7 +382,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function getAllOrders($symbol = NULL, $orderId = NULL, $limit = NULL, $recvWindow = NULL)
@@ -705,7 +422,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function sendOrder($symbol, $side, $type, $quantity, $price = NULL, $options = [])
@@ -740,7 +456,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function cancelOrder($symbol, $orderId = NULL, $origClientOrderId = NULL, $recvWindow = NULL)
@@ -768,7 +483,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function getAcount($recvWindow = NULL)
@@ -799,7 +513,6 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
      * @throws PhinanceClientException
      */
     public function getMyTrades($symbol, $limit = NULL, $fromId = NULL, $recvWindow = NULL)

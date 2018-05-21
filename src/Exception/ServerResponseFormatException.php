@@ -1,7 +1,7 @@
 <?php
 namespace Phinance\Exception;
 
-class ServerResponseFormatException extends \Exception
+class ServerResponseFormatException extends \Exception implements PhinanceClientExceptionInterface
 {
     /**
      * construct
