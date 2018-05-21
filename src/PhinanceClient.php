@@ -10,6 +10,7 @@ use NetDriver\Http\HttpDeleteRequest;
 use NetDriver\NetDriver\Curl\CurlNetDriver;
 
 use Phinance\Exception\PhinanceClientException;
+use Phinance\Exception\PhinanceClientExceptionInterface;
 use Phinance\Exception\ServerResponseFormatException;
 use Phinance\Exception\WebApiCallException;
 use Phinance\Enum\EnumSecurityType;
@@ -161,7 +162,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return mixed
      *
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     private function get($api, array $query_data = [])
     {
@@ -184,7 +185,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return mixed
      *
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     private function privateGet($api, $security_type, array $query_data = [])
     {
@@ -233,7 +234,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return mixed
      *
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     private function privatePost($api, $security_type, array $post_data = [])
     {
@@ -280,7 +281,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return mixed
      *
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     private function privateDelete($api, array $query_data = [])
     {
@@ -311,7 +312,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return mixed
      *
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     private function executeRequest($request)
     {
@@ -335,8 +336,7 @@ class PhinanceClient implements PhinanceClientInterface
     /**
      * [public] send ping
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function ping()
     {
@@ -351,8 +351,7 @@ class PhinanceClient implements PhinanceClientInterface
     /**
      * [public] set server time offset
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function setServerTime()
     {
@@ -365,8 +364,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return int
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function getTime()
     {
@@ -384,8 +382,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return object
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function getExchangeInfo()
     {
@@ -406,8 +403,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return object
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function getDepth($symbol, $limit = NULL)
     {
@@ -435,8 +431,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function getTrades($symbol, $limit = NULL)
     {
@@ -466,8 +461,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function getHistoricalTrades($symbol, $fromId = NULL, $limit = NULL)
     {
@@ -501,8 +495,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function getKlines($symbol, $interval, $limit = NULL, $startTime = NULL, $endTime = NULL)
     {
@@ -536,8 +529,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function getTicker24hr($symbol = NULL)
     {
@@ -570,8 +562,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function getTickerPrice($symbol = NULL)
     {
@@ -596,8 +587,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function getTickerBookTicker($symbol = NULL)
     {
@@ -631,8 +621,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function getOpenOrders($symbol = NULL, $recvWindow = NULL)
     {
@@ -664,8 +653,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function getAllOrders($symbol = NULL, $orderId = NULL, $limit = NULL, $recvWindow = NULL)
     {
@@ -705,8 +693,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function sendOrder($symbol, $side, $type, $quantity, $price = NULL, $options = [])
     {
@@ -740,8 +727,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function cancelOrder($symbol, $orderId = NULL, $origClientOrderId = NULL, $recvWindow = NULL)
     {
@@ -768,8 +754,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function getAcount($recvWindow = NULL)
     {
@@ -799,8 +784,7 @@ class PhinanceClient implements PhinanceClientInterface
      *
      * @return array
      *
-     * @throws ServerResponseFormatException
-     * @throws PhinanceClientException
+     * @throws PhinanceClientExceptionInterface
      */
     public function getMyTrades($symbol, $limit = NULL, $fromId = NULL, $recvWindow = NULL)
     {
