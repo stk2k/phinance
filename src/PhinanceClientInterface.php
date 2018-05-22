@@ -33,6 +33,13 @@ interface PhinanceClientInterface
     public function getNetDriver();
 
     /**
+     * set net driver
+     *
+     * @param NetDriverInterface $net_driver
+     */
+    public function setNetDriver(NetDriverInterface $net_driver);
+
+    /**
      * [public] send ping
      *
      * @throws PhinanceClientException
