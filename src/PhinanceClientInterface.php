@@ -2,6 +2,7 @@
 namespace Phinance;
 
 use NetDriver\Http\HttpRequest;
+use NetDriver\NetDriverInterface;
 
 use Phinance\Exception\PhinanceClientException;
 
@@ -23,6 +24,13 @@ interface PhinanceClientInterface
      * @param NetDriverChangeListenerInterface|callable $listener
      */
     public function addNetDriverChangeListener($listener);
+
+    /**
+     * get net driver
+     *
+     * @return NetDriverInterface
+     */
+    public function getNetDriver();
 
     /**
      * [public] send ping

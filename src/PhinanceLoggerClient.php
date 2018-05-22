@@ -63,6 +63,16 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
     }
 
     /**
+     * get net driver
+     *
+     * @return NetDriverInterface
+     */
+    public function getNetDriver()
+    {
+        return $this->client->getNetDriver();
+    }
+
+    /**
      * [public] send ping
      *
      * @throws PhinanceClientException
