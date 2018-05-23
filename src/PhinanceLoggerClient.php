@@ -124,7 +124,7 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
     /**
      * [public] get exchange info
      *
-     * @return object
+     * @return array
      *
      * @throws PhinanceClientException
      */
@@ -142,7 +142,7 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
      * @param string $symbol
      * @param int $limit
      *
-     * @return object
+     * @return array
      *
      * @throws PhinanceClientException
      */

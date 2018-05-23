@@ -65,7 +65,7 @@ interface PhinanceClientInterface
     /**
      * [public] get exchange info
      *
-     * @return object
+     * @return array
      *
      * @throws PhinanceClientException
      */
@@ -77,7 +77,7 @@ interface PhinanceClientInterface
      * @param string $symbol
      * @param int $limit
      *
-     * @return object
+     * @return array
      *
      * @throws PhinanceClientException
      */

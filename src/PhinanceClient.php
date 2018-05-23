@@ -198,7 +198,7 @@ class PhinanceClient implements PhinanceClientInterface
         switch($security_type){
             case EnumSecurityType::TRADE:
             case EnumSecurityType::USER_DATA:
-                $ts = (microtime(true)*1000) + $this->time_offset;
+                $ts = (microtime(true)*1000) + $this->getServerTime();
                 $query_data['timestamp'] = number_format($ts,0,'.','');
                 $query = http_build_query($query_data, '', '&');
                 $signature = hash_hmac('sha256', $query, $this->api_secret);
@@ -247,7 +247,7 @@ class PhinanceClient implements PhinanceClientInterface
         switch($security_type){
             case EnumSecurityType::TRADE:
             case EnumSecurityType::USER_DATA:
-                $ts = (microtime(true)*1000) + $this->time_offset;
+                $ts = (microtime(true)*1000) + $this->getServerTime();
                 $post_data['timestamp'] = number_format($ts,0,'.','');
                 $query = http_build_query($post_data, '', '&');
                 $signature = hash_hmac('sha256', $query, $this->api_secret);
@@ -290,7 +290,7 @@ class PhinanceClient implements PhinanceClientInterface
             return $v !== null;
         });
 
-        $ts = (microtime(true)*1000) + $this->time_offset;
+        $ts = (microtime(true)*1000) + $this->getServerTime();
         $query_data['timestamp'] = number_format($ts,0,'.','');
         $query = http_build_query($query_data, '', '&');
         $signature = hash_hmac('sha256', $query, $this->api_secret);
@@ -361,6 +361,19 @@ class PhinanceClient implements PhinanceClientInterface
     }
 
     /**
+     * [public] set server time offset
+     *
+     * @throws PhinanceClientExceptionInterface
+     */
+    protected function getServerTime()
+    {
+        if (!$this->time_offset){
+            $this->setServerTime();
+        }
+        return $this->time_offset;
+    }
+
+    /**
      * [public] get server time
      *
      * @return int
@@ -381,7 +394,7 @@ class PhinanceClient implements PhinanceClientInterface
     /**
      * [public] get exchange info
      *
-     * @return object
+     * @return array
      *
      * @throws PhinanceClientExceptionInterface
      */
@@ -402,7 +415,7 @@ class PhinanceClient implements PhinanceClientInterface
      * @param string $symbol
      * @param int $limit
      *
-     * @return object
+     * @return array
      *
      * @throws PhinanceClientExceptionInterface
      */
@@ -542,16 +555,8 @@ class PhinanceClient implements PhinanceClientInterface
         // HTTP GET
         $json = $this->get(PhinanceApi::TICKER_24HR, $data);
         // check return type
-        if ($symbol)
-        {
-            if (!is_object($json)){
-                throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
-            }
-        }
-        else{
-            if (!is_array($json)){
-                throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-            }
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
         return $json;
     }
@@ -600,16 +605,8 @@ class PhinanceClient implements PhinanceClientInterface
         // HTTP GET
         $json = $this->get(PhinanceApi::TICKER_BOOKTICKER, $data);
         // check return type
-        if ($symbol)
-        {
-            if (!is_object($json)){
-                throw new ServerResponseFormatException('response must be an object, but returned:' . gettype($json));
-            }
-        }
-        else{
-            if (!is_array($json)){
-                throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
-            }
+        if (!is_array($json)){
+            throw new ServerResponseFormatException('response must be an array, but returned:' . gettype($json));
         }
         return $json;
     }
