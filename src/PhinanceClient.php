@@ -131,7 +131,7 @@ class PhinanceClient implements PhinanceClientInterface
      */
     private function fireHttpRequestCreateEvent(HttpRequest $request)
     {
-        foreach($this->netDriverChangeListeners as $l) {
+        foreach($this->httpRequestCreateListeners as $l) {
             if ($l instanceof HttpRequestCreateListenerInterface) {
                 $l->onHttpRequestCreated($request);
             }
