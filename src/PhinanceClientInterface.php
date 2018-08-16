@@ -26,6 +26,13 @@ interface PhinanceClientInterface
     public function addNetDriverChangeListener($listener);
 
     /**
+     * add request create listener
+     *
+     * @param HttpRequestCreateListenerInterface|callable $listener
+     */
+    public function addRequestCreateListener($listener);
+
+    /**
      * get net driver
      *
      * @return NetDriverInterface

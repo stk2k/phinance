@@ -39,7 +39,10 @@ class PhinanceClient implements PhinanceClientInterface
     private $net_driver;
 
     /** @var NetDriverChangeListenerInterface[] */
-    private $listeners;
+    private $netDriverChangeListeners;
+
+    /** @var HttpRequestCreateListenerInterface[] */
+    private $httpRequestCreateListeners;
 
     /**
      * construct
@@ -53,7 +56,8 @@ class PhinanceClient implements PhinanceClientInterface
         $this->netdriver_handle = null;
         $this->last_request = null;
         $this->time_offset = 0;
-        $this->listeners = [];
+        $this->netDriverChangeListeners = [];
+        $this->httpRequestCreateListeners = [];
     }
 
     /**
@@ -73,8 +77,21 @@ class PhinanceClient implements PhinanceClientInterface
      */
     public function addNetDriverChangeListener($listener)
     {
-        if (is_callable($listener) || $listener instanceof NetDriverChangeListenerInterface)
-            $this->listeners[] = $listener;
+        if (is_callable($listener) || $listener instanceof NetDriverChangeListenerInterface){
+            $this->netDriverChangeListeners[] = $listener;
+        }
+    }
+
+    /**
+     * add request create listener
+     *
+     * @param HttpRequestCreateListenerInterface|callable $listener
+     */
+    public function addRequestCreateListener($listener)
+    {
+        if (is_callable($listener) || $listener instanceof HttpRequestCreateListenerInterface){
+            $this->httpRequestCreateListeners[] = $listener;
+        }
     }
 
     /**
@@ -97,12 +114,29 @@ class PhinanceClient implements PhinanceClientInterface
      */
     private function fireNetDriverChangeEvent(NetDriverInterface $net_driver)
     {
-        foreach($this->listeners as $l) {
+        foreach($this->netDriverChangeListeners as $l) {
             if ($l instanceof NetDriverChangeListenerInterface) {
                 $l->onNetDriverChanged($net_driver);
             }
             else if (is_callable($l)) {
                 $l($net_driver);
+            }
+        }
+    }
+
+    /**
+     * http request create callback
+     *
+     * @param HttpRequest $request
+     */
+    private function fireHttpRequestCreateEvent(HttpRequest $request)
+    {
+        foreach($this->netDriverChangeListeners as $l) {
+            if ($l instanceof HttpRequestCreateListenerInterface) {
+                $l->onHttpRequestCreated($request);
+            }
+            else if (is_callable($l)) {
+                $l($request);
             }
         }
     }
@@ -223,6 +257,8 @@ class PhinanceClient implements PhinanceClientInterface
 
         $request = new HttpGetRequest($this->getNetDriver(), $url, $options);
 
+        $this->fireHttpRequestCreateEvent($request);
+
         return $this->executeRequest($request);
     }
 
@@ -271,6 +307,8 @@ class PhinanceClient implements PhinanceClientInterface
 
         $request = new HttpPostRequest($this->getNetDriver(), $url, $post_data, $options);
 
+        $this->fireHttpRequestCreateEvent($request);
+
         return $this->executeRequest($request);
     }
 
@@ -302,6 +340,8 @@ class PhinanceClient implements PhinanceClientInterface
 
         $url = self::getURL($api) . '?' . $query . '&signature=' . $signature;
         $request = new HttpDeleteRequest($this->getNetDriver(), $url,  $options);
+
+        $this->fireHttpRequestCreateEvent($request);
 
         return $this->executeRequest($request);
     }
