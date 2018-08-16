@@ -63,6 +63,16 @@ class PhinanceLoggerClient implements PhinanceClientInterface, NetDriverChangeLi
     }
 
     /**
+     * add request create listener
+     *
+     * @param HttpRequestCreateListenerInterface|callable $listener
+     */
+    public function addRequestCreateListener($listener)
+    {
+        $this->client->addRequestCreateListener($listener);
+    }
+
+    /**
      * get net driver
      *
      * @return NetDriverInterface
