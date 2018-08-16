@@ -3,7 +3,10 @@ require dirname(dirname(__FILE__)) . '/vendor/autoload.php';
 require dirname(__FILE__) . '/include/autoload.php';
 require dirname(__FILE__) . '/include/sample.inc.php';
 
+use Wa72\SimpleLogger\EchoLogger;
+
 use Phinance\PhinanceClient;
+use Phinance\PhinanceLoggerClient;
 
 list($api_key, $api_secret) = binance_credentials();
 
@@ -18,6 +21,7 @@ $argdefs = array(
 list($symbol, $side, $type, $quantity, $fromid, $limit) = get_args($argdefs,__FILE__);
 
 $client = new PhinanceClient($api_key, $api_secret);
+$client = new PhinanceLoggerClient($client, new EchoLogger);
 
 try{
     $client->setServerTime();

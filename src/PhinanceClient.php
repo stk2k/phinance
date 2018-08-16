@@ -700,6 +700,7 @@ class PhinanceClient implements PhinanceClientInterface
             'side' => $side,
             'type' => $type,
             'quantity' => $quantity,
+            'recvWindow' => 60000,
         );
         if ($price){
             $data['price'] = number_format( $price, 8, '.', '' );
