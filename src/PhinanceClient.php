@@ -305,7 +305,7 @@ class PhinanceClient implements PhinanceClientInterface
                 break;
         }
 
-        $request = new HttpPostRequest($this->getNetDriver(), $url, $post_data, $options);
+        $request = new HttpPostRequest($this->getNetDriver(), $url, [], $options);
 
         $this->fireHttpRequestCreateEvent($request);
 
